@@ -3,16 +3,16 @@
 
 * Creating dir structure
 
-```mkdir my-root-ca
+```
+mkdir my-root-ca
 cd my-root-ca
 mkdir certs db private newcerts crl
 chmod 700 private
 touch db/index.txt db/index.txt.attr
 openssl rand -hex 16  > db/serial
 echo 1001 > crl/crlnumber
+wget https://raw.githubusercontent.com/ccaballe/ca-utils/master/root-ca.conf
 ```
-`wget https://raw.githubusercontent.com/ccaballe/ca-utils/master/root-ca.conf
-`
 
 * Edit the path in dir variable:
 
@@ -49,7 +49,8 @@ echo 1001 > crl/crlnumber
 
 * Directory Tree
 
-```mkdir my-intermediate-ca
+```
+mkdir my-intermediate-ca
 cd my-intermediate-ca
 mkdir db certs crl csr newcerts private
 chmod 700 private
@@ -74,7 +75,8 @@ wget https://raw.githubusercontent.com/ccaballe/ca-utils/master/intermediate-ca.
 
 * Sign the certificate 
 
-```cd..
+```
+cd..
 openssl ca -config root-ca.conf -extensions v3_intermediate_ca -days 3650 -notext -md sha256 -in my-intermediate-ca/csr/numa-intermediate-ca.csr.pem -out my-intermediate-ca/certs/numa-intermediate-ca.cert.pem
 
 chmod 444 my-intermediate-ca/certs/numa-intermediate-ca.cert.pem
@@ -90,31 +92,35 @@ chmod 444 my-intermediate-ca/certs/numa-intermediate-ca.cert.pem
 
 * Create chain
 
-```cat my-intermediate-ca/certs/numa-intermediate-ca.cert.pem certs/stratio-ca.cert.pem > my-intermediate-ca/certs/ca-chain.cert.pem
+```
+cat my-intermediate-ca/certs/numa-intermediate-ca.cert.pem certs/stratio-ca.cert.pem > my-intermediate-ca/certs/ca-chain.cert.pem
 chmod 444 my-intermediate-ca/certs/ca-chain.cert.pem
 ```
 
 # New certs
 
-```cd my-intermediate-ca```
+`cd my-intermediate-ca`
 
 * Server Certificate
 
-```openssl req -new -newkey rsa:2048 -subj "/C=ES/O=Stratio Numa/CN=server00.dev.stratio.com" -keyout private/server00.key -out certs/server00.csr
+```
+openssl req -new -newkey rsa:2048 -subj "/C=ES/O=Stratio Numa/CN=server00.dev.stratio.com" -keyout private/server00.key -out certs/server00.csr
 openssl ca -config intermediate-ca.conf -in certs/server00.csr -out certs/server00.cert.pem -extensions server_cert
 ```
 
 * Client Certificate
 
-```openssl req -new -newkey rsa:2048 -subj "/C=ES/O=Stratio Numa/CN=client00.dev.stratio.com" -keyout private/client00.key -out certs/client00.csr
-openssl ca -config intermediate-ca.conf -in certs/client00.csr -out certs/client00.cert.pem -extensions client_ext
+```
+openssl req -new -newkey rsa:2048 -subj "/C=ES/O=Stratio Numa/CN=client00.dev.stratio.com" -keyout private/client00.key -out certs/client00.csr
+openssl ca -config intermediate-ca.conf -in certs/client00.csr -out certs/client00.cert.pem -extensions usr_cert
 ```
 
 * Read the new cert
-`openssl x509 -noout -text -in certs/client00.cert.pem`
+`openssl x509 -in certs/client00.cert.pem -noout -text `
 
 * Verify (with chain)
-```cd ../
+```
+cd ../
 openssl verify -CAfile my-intermediate-ca/certs/ca-chain.cert.pem my-intermediate-ca/certs/server00.cert.pem
 ```
 

@@ -76,7 +76,7 @@ wget https://raw.githubusercontent.com/ccaballe/ca-utils/master/intermediate-ca.
 * Sign the certificate 
 
 ```
-cd..
+cd ..
 openssl ca -config root-ca.conf -extensions v3_intermediate_ca -days 3650 -notext -md sha256 -in my-intermediate-ca/csr/numa-intermediate-ca.csr.pem -out my-intermediate-ca/certs/numa-intermediate-ca.cert.pem
 
 chmod 444 my-intermediate-ca/certs/numa-intermediate-ca.cert.pem
@@ -107,6 +107,18 @@ chmod 444 my-intermediate-ca/certs/ca-chain.cert.pem
 openssl req -new -newkey rsa:2048 -subj "/C=ES/O=Stratio Numa/CN=server00.dev.stratio.com" -keyout private/server00.key -out certs/server00.csr
 openssl ca -config intermediate-ca.conf -in certs/server00.csr -out certs/server00.cert.pem -extensions server_cert
 ```
+
+* Convert to keystore jks
+```
+openssl pkcs12 -export -inkey ../private/server00.key -in ./server00.cert.pem -out server00.p12
+keytool -noprompt -importkeystore -srckeystore server00.p12 -srcstoretype PKCS12 -destkeystore server00.jks
+```
+
+* Add ca to truststore
+```
+keytool -import -noprompt -alias ca -keystore intermediate-truststore.jks -file numa-intermediate-ca.cert.pem
+```
+
 
 * Client Certificate
 
